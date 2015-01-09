@@ -16,6 +16,7 @@ var app = {
   // function, we must explicitly call 'app.receivedEvent(...);'
   onDeviceReady: function() {
     app.receivedEvent('deviceready');
+    alert('Open the console to begin testing with \'app.test()\', view results');
   },
   // Update DOM on a Received Event
   receivedEvent: function(id) {
@@ -36,33 +37,33 @@ var app = {
     longString: 'Eric Arthur Blair (George Orwell) was born in 1903 in India, where his father worked for the Civil Service. The family moved to England in 1907 and in 1917 Orwell entered Eton, where he contributed regularly to the various college magazines. He left in 1921 and joined the Indian Imperial Police in Burma the following year, in which he served until 1928.\n\nHis first published article appeared in Le Monde in October 1928, while Orwell was living in Paris, and he returned to England in 1929 to take up work as a private tutor and later as a scoolteacher (1932). Down and Out in Paris and London was published in 1933. Due to his poor health, Orwell gave up teaching, and worked as a part-time assistant in a Hampstead bookshop, and later was able to earn his living reviewing novels for the New English Weekly, a post he kept until 1940.\n\nAt the end of 1936 Orwell went to Spainto fight for the Republicans and was wounded. During the Second World War he was a member of the Home Guard and worked for the BBC Eastern Service from 1940 to 1943. As literary editor of Tribune he contributed a regular page of political and literary commentary. From 1945 Orwell was the Observer’s war correspondent and later became a regular contributor to the Manchester Evening News.\n\nOrwell suffered from tuberculosis, and was in and out of hospital from 1947 until his death in 1950. He was forty-six.\n\nHis publications include The Road to Wigan Pier, Coming Up for Air, Keep the Aspidistra Flying and Homage to Catalonia. Orwell’s name became widely known with the publication of Animal Farm and Nineteen Eighty-Four, both of which have sold more that two million copies. All Orwell’s works have been published in Penguin.'
   },
 
-  testContainerStatus: function testContainerStatus() {
+  test100EncryptDecryptOps: function testContainerStatus(str, testName) {
     var encrypted = [];
-    console.time('boxing status');
+    console.time('boxing ' + testName);
 
     for (var i = 0; i < 100; i++) {
       var key = nacl.randomBytes(32);
       var nonce = nacl.randomBytes(24);
       try {
-        var box = app.secretBox(app.testContainers.mockStatus, nonce, key);
+        var box = app.secretBox(str, nonce, key);
+        encrypted.push(box);
       } catch (ex) {
         console.error(ex);
         continue;
       }
-      encrypted.push(box);
     }
 
-    console.timeEnd('boxing status');
+    console.timeEnd('boxing ' + testName);
 
     var decrypted = [];
 
-    console.time('opening status');
+    console.time('opening ' + testName);
 
     for (i = 0; i < encrypted.length; i++) {
       decrypted.push(app.secretOpen(encrypted[i]));
     }
 
-    console.timeEnd('opening status');
+    console.timeEnd('opening ' + testName);
 
     return {
       encrypted: encrypted,
@@ -72,42 +73,10 @@ var app = {
   },
 
   test: function test() {
-    app.testContainerStatus();
-    app.testLongString();
-  },
-
-  testLongString: function testLongString() {
-    var encrypted = [];
-    console.time('boxing status');
-
-    for (var i = 0; i < 100; i++) {
-      var key = nacl.randomBytes(32);
-      var nonce = nacl.randomBytes(24);
-      try {
-        var box = app.secretBox(app.testContainers.longString, nonce, key);
-      } catch (ex) {
-        console.error(ex);
-        continue;
-      }
-      encrypted.push(box);
-    }
-
-    console.timeEnd('boxing status');
-
-    var decrypted = [];
-
-    console.time('opening status');
-
-    for (i = 0; i < encrypted.length; i++) {
-      decrypted.push(app.secretOpen(encrypted[i]));
-    }
-
-    console.timeEnd('opening status');
-
-    return {
-      encrypted: encrypted,
-      decrypted: decrypted
-    };
+    app.test100EncryptDecryptOps(app.testContainers.mockStatus, 'nacl mock status');
+    app.test100EncryptDecryptOps(app.testContainers.longString, 'nacl long string');
+    app.sjclTest(app.testContainers.mockStatus, 'sjcl mock status');
+    app.sjclTest(app.testContainers.longString, 'sjcl long string');
   },
 
   string2CharCode: function string2CharCode(str) {
@@ -145,8 +114,55 @@ var app = {
     var plaintxtArr = nacl.secretbox.open(box.secret, box.nonce, box.key);
     var txt = app.charCode2Str(plaintxtArr);
     return txt;
-  }
+  },
 
+  sjclCipherOptions: {
+    mode: 'gcm'
+  },
+
+  sjclEncrypt: function sjclEncrypt (str) {
+
+    var key =  sjcl.random.randomWords(8); // 8 'words' = 32 bytes
+    var ciphertext = sjcl.encrypt(key, str, app.sjclCipherOptions);
+
+    return {
+      key: key,
+      ciphertext: ciphertext
+    };
+
+  },
+
+  sjclDecrypt: function sjclDecrypt (key, ciphertext) {
+    var message = sjcl.decrypt(key,
+                               ciphertext,
+                               app.sjclCipherOptions);
+    return message;
+  },
+
+  sjclTest: function sjclTest(str, testName) {
+    var encrypted = [];
+    console.time('encrypt ' + testName);
+
+    for (var i = 0; i < 100; i++) {
+      encrypted.push(app.sjclEncrypt(str));
+    }
+    console.timeEnd('encrypt ' + testName);
+
+    var decrypted = [];
+    console.time('decrypt ' + testName);
+
+    for (var i = 0; i < encrypted.length; i++) {
+      var d = app.sjclDecrypt(encrypted[i].key,
+                              encrypted[i].ciphertext);
+      decrypted.push(d);
+    }
+    console.timeEnd('decrypt ' + testName);
+
+    return {
+      encrypted: encrypted,
+      decrypted: decrypted
+    };
+  }
 };
 
 app.initialize();
