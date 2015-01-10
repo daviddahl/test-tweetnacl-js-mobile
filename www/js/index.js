@@ -93,6 +93,9 @@ var app = {
 
     app.testMB();
     app.testMBsjcl();
+
+    app.pbkdf2Triplesec('topothemornintoya');
+    app.pbkdf2Sjcl('topothemornintoya');
   },
 
   testMB: function () {
@@ -230,6 +233,35 @@ var app = {
       encrypted: encrypted,
       decrypted: decrypted
     };
+  },
+
+  pbkdf2Triplesec: function pbkdf2Triplesec(passphrase) {
+    var saltArr = new Int8Array(16);
+    window.crypto.getRandomValues(saltArr);
+    var _salt = app.charCode2Str(saltArr);
+    var salt = new triplesec.WordArray('123456789012345612345678901234567890');
+    var pass = new triplesec.WordArray(passphrase);
+    var args = {
+      key: pass,
+      salt: salt,
+      c: 10000,
+      dkLen: 32,
+      klass: triplesec.HMAC_SHA256
+    };
+
+    console.time('triplesec PBKDF2');
+    triplesec.pbkdf2(args, function callback () {
+      console.timeEnd('triplesec PBKDF2');
+      console.log('PBKDF2 callback args: ',  arguments);
+    });
+  },
+
+  pbkdf2Sjcl: function (passphrase) {
+    var keypairSalt  = sjcl.random.randomWords(32);
+    console.time('sjcl PBKDF2');
+    var key = sjcl.misc.pbkdf2(passphrase, keypairSalt, 10000);
+    console.timeEnd('sjcl PBKDF2');
+    console.log(key);
   }
 };
 
