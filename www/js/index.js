@@ -90,6 +90,9 @@ var app = {
     app.test100EncryptDecryptOps(app.testContainers.longString, 'nacl long string');
     app.sjclTest(app.testContainers.mockStatus, 'sjcl mock status');
     app.sjclTest(app.testContainers.longString, 'sjcl long string');
+
+    app.testMB();
+    app.testMBsjcl();
   },
 
   testMB: function () {
