@@ -5,18 +5,36 @@ This app is for understanding the performance of tweetnacl-js on mobile devices 
 
 # Latest perf measurements:
 
-boxing nacl mock status: 14.191ms index.js:56
+<pre>
+app.test()
 
-opening nacl mock status: 21.942ms index.js:66
+boxing nacl mock status: 194.885ms index.js:69
 
-boxing nacl long string: 31.860ms index.js:56
+opening nacl mock status: 69.336ms index.js:79
 
-opening nacl long string: 53.681ms index.js:66
+boxing nacl long string: 71.289ms index.js:69
 
-sjcl encrypt sjcl mock status: 106.110ms index.js:149
+opening nacl long string: 61.462ms index.js:79
 
-sjcl decrypt sjcl mock status: 149.842ms index.js:159
+encrypt sjcl mock status: 232.177ms index.js:217
 
-sjcl encrypt sjcl long string: 639.221ms index.js:149
+decrypt sjcl mock status: 209.991ms index.js:227
 
-sjcl decrypt sjcl long string: 746.979ms  
+encrypt sjcl long string: 737.519ms index.js:217
+
+decrypt sjcl long string: 772.003ms index.js:227
+
+generating a MB of data... one sec. index.js:99
+
+nacl MB: 70.923ms index.js:106
+
+nacl decrypt MB: 70.679ms index.js:117
+
+generating a MB of data... one sec. index.js:121
+
+creating a string... one sec. index.js:124
+
+sjcl MB: 9200.989ms index.js:132
+
+sjcl MB decrypt: 9295.288ms 
+</pre>
