@@ -37,6 +37,19 @@ var app = {
     longString: 'Eric Arthur Blair (George Orwell) was born in 1903 in India, where his father worked for the Civil Service. The family moved to England in 1907 and in 1917 Orwell entered Eton, where he contributed regularly to the various college magazines. He left in 1921 and joined the Indian Imperial Police in Burma the following year, in which he served until 1928.\n\nHis first published article appeared in Le Monde in October 1928, while Orwell was living in Paris, and he returned to England in 1929 to take up work as a private tutor and later as a scoolteacher (1932). Down and Out in Paris and London was published in 1933. Due to his poor health, Orwell gave up teaching, and worked as a part-time assistant in a Hampstead bookshop, and later was able to earn his living reviewing novels for the New English Weekly, a post he kept until 1940.\n\nAt the end of 1936 Orwell went to Spainto fight for the Republicans and was wounded. During the Second World War he was a member of the Home Guard and worked for the BBC Eastern Service from 1940 to 1943. As literary editor of Tribune he contributed a regular page of political and literary commentary. From 1945 Orwell was the Observer’s war correspondent and later became a regular contributor to the Manchester Evening News.\n\nOrwell suffered from tuberculosis, and was in and out of hospital from 1947 until his death in 1950. He was forty-six.\n\nHis publications include The Road to Wigan Pier, Coming Up for Air, Keep the Aspidistra Flying and Homage to Catalonia. Orwell’s name became widely known with the publication of Animal Farm and Nineteen Eighty-Four, both of which have sold more that two million copies. All Orwell’s works have been published in Penguin.'
   },
 
+  generateAMegabyte: function () {
+    var mb = new Uint8Array(1024000);
+    var segment = 64000;
+    var offset = 0;
+    for (var i = 0; i < 16; i++) {
+      var sixtyFourK = new Uint8Array(64000);
+      window.crypto.getRandomValues(sixtyFourK);
+      mb.set(sixtyFourK, offset);
+      offset = offset + segment;
+    }
+    return mb;
+  },
+
   test100EncryptDecryptOps: function testContainerStatus(str, testName) {
     var encrypted = [];
     console.time('boxing ' + testName);
@@ -79,6 +92,14 @@ var app = {
     app.sjclTest(app.testContainers.longString, 'sjcl long string');
   },
 
+  encode: function encode(str) {
+    return new TextEncoder('utf-8').encode(str);
+  },
+
+  decode: function encode(arr) {
+    return new TextDecoder('utf-8').decode(arr);
+  },
+
   string2CharCode: function string2CharCode(str) {
     var arr = new Uint8Array(str.length);
 
@@ -100,6 +121,7 @@ var app = {
   secretBox: function secretBox(str, nonce, key) {
     // this function creates the nonce and returns it as part of the operation
     var plaintxtArr = app.string2CharCode(str);
+    // var plaintxtArr = app.encode(str);
     var secret = nacl.secretbox(plaintxtArr, nonce, key);
 
     return {
@@ -113,6 +135,7 @@ var app = {
     // nacl.secretbox.open(box, nonce, key)
     var plaintxtArr = nacl.secretbox.open(box.secret, box.nonce, box.key);
     var txt = app.charCode2Str(plaintxtArr);
+    // var txt = app.decode(plaintxtArr);
     return txt;
   },
 
