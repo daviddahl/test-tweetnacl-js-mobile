@@ -92,6 +92,48 @@ var app = {
     app.sjclTest(app.testContainers.longString, 'sjcl long string');
   },
 
+  testMB: function () {
+    console.warn('generating a MB of data... one sec.');
+    var mb = app.generateAMegabyte();
+    var key = nacl.randomBytes(32);
+    var nonce = nacl.randomBytes(24);
+
+    console.time('nacl MB');
+    var secret = nacl.secretbox(mb, nonce, key);
+    console.timeEnd('nacl MB');
+
+    var result =  {
+      secret: secret,
+      nonce: nonce,
+      key: key
+    };
+
+    // decrypt:
+    console.time('nacl decrypt MB');
+    var decrypted = nacl.secretbox.open(result.secret, nonce, key);
+    console.timeEnd('nacl decrypt MB');
+  },
+
+  testMBsjcl: function () {
+    console.warn('generating a MB of data... one sec.');
+    var mb = app.generateAMegabyte();
+
+    console.warn('creating a string... one sec.');
+    // create a string... sigh.
+    var str = '';
+    for (var i = 0; i < mb.length; i++) {
+      str += mb[i];
+    }
+    console.time('sjcl MB');
+    var result = app.sjclEncrypt(str);
+    console.timeEnd('sjcl MB');
+
+    // decrypt
+    console.time('sjcl MB decrypt');
+    app.sjclDecrypt(result.key, result.ciphertext);
+    console.timeEnd('sjcl MB decrypt')
+  },
+
   encode: function encode(str) {
     return new TextEncoder('utf-8').encode(str);
   },
